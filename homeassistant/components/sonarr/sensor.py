@@ -118,9 +118,9 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         """Return the state attributes of the entity."""
         attrs = {}
         key = self.entity_description.key
+        app = self.coordinator.sonarr.app
 
         if key == "diskspace":
-            app = self.coordinator.sonarr.app
             for disk in app.disks:
                 free = disk.free / 1024 ** 3
                 total = disk.total / 1024 ** 3
@@ -155,6 +155,7 @@ class SonarrSensor(SonarrEntity, SensorEntity):
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         key = self.entity_description.key
+        app = self.coordinator.sonarr.app
 
         if key == "diskspace":
             total_free = sum(disk.free for disk in app.disks)
