@@ -182,7 +182,7 @@ async def setup_integration(
     port: str = PORT,
     base_path: str = BASE_PATH,
     api_key: str = API_KEY,
-    unique_id: str = None,
+    unique_id: str = "sonarr_unique_id",
     skip_entry_setup: bool = False,
     connection_error: bool = False,
     invalid_auth: bool = False,
