@@ -297,6 +297,7 @@ FLOWS = [
     "vizio",
     "volumio",
     "wallbox",
+    "water_meter_rs485",
     "waze_travel_time",
     "wemo",
     "wiffi",

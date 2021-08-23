@@ -1,0 +1,19 @@
+{
+  "domain": "water_meter_rs485",
+  "name": "Water Meter RS485",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/water_meter_rs485",
+  "requirements": [
+    "pyserial==3.5",
+    "pyserial-asyncio==0.5",
+    "libscrc==1.7.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@mikrut"
+  ],
+  "iot_class": "local_polling"
+}

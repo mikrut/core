@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "no_serial_port": "No serial port",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "baudrate": "Baudrate",
+                    "byte_size": "Byte size",
+                    "parity": "Parity",
+                    "stop_bits": "Stop bits",
+                    "serial_port": "Serial port"
+                },
+                "description": "Select serial port for RS485",
+                "title": "Water Meter RS485"
+            }
+        }
+    }
+}

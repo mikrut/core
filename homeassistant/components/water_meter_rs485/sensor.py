@@ -1,0 +1,59 @@
+"""Sensor for RS485 water meter."""
+
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_GAS,
+    STATE_CLASS_TOTAL_INCREASING,
+    SensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import VOLUME_CUBIC_METERS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    dm = hass.data[DOMAIN]
+    ce = dm[config_entry.entry_id]
+    ma = ce["master"]
+    async_add_entities(
+        new_entities=[
+            Dg15Sensor(
+                unique_id="4344155",
+                master=ma,
+                hass=hass,
+            ),
+        ],
+        update_before_add=True,
+    )
+
+
+class Dg15Sensor(SensorEntity):
+    """DG-15 Water Meter Sensor"""
+
+    def __init__(
+        self,
+        unique_id: str,
+        master,
+        hass: HomeAssistant,
+    ) -> None:
+        """Init this sensor."""
+        self._unique_id = unique_id
+        self._master = master
+        self._hass = hass
+
+        self._attr_device_class = DEVICE_CLASS_GAS
+        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        self._attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
+        self._attr_native_value = None
+
+    async def async_update(self):
+        volume = await self._hass.async_add_executor_job(
+            self._master.read_value, self._unique_id
+        )
+        self._attr_native_value = volume

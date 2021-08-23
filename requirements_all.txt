@@ -903,6 +903,9 @@ libpyvivotek==0.4.0
 # homeassistant.components.mikrotik
 librouteros==3.0.0
 
+# homeassistant.components.water_meter_rs485
+libscrc==1.7.1
+
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
 
@@ -1751,11 +1754,13 @@ pysdcp==1
 pysensibo==1.0.3
 
 # homeassistant.components.serial
+# homeassistant.components.water_meter_rs485
 # homeassistant.components.zha
 pyserial-asyncio==0.5
 
 # homeassistant.components.acer_projector
 # homeassistant.components.usb
+# homeassistant.components.water_meter_rs485
 # homeassistant.components.zha
 pyserial==3.5
 
