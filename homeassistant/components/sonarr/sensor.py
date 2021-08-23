@@ -50,11 +50,9 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         key: str,
         name: str,
         unit_of_measurement: str | None = None,
-        datapoint: str | None = None,
     ) -> None:
         """Initialize Sonarr sensor."""
         self._key = key
-        self._datapoint = datapoint
         self._attr_name = name
         self._attr_icon = icon
         self._attr_unique_id = f"{entry_id}_{key}"
@@ -72,17 +70,78 @@ class SonarrSensor(SonarrEntity, SensorEntity):
         if not self.enabled:
             return
 
-        if self._datapoint:
+        if self.key not in ("diskspace"):
             self.coordinator.enable_datapoint(self._datapoint)
 
         await super().async_update()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disable additional datapoint for sensor data."""
-        if self._datapoint:
+        if self.key not in ("diskspace"):
             self.coordinator.disable_datapoint(self._datapoint)
 
         await super().async_will_remove_from_hass()
+
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        if self.key == "diskspace":
+            app = self.coordinator.sonarr.app
+        for disk in app.disks:
+            free = disk.free / 1024 ** 3
+            total = disk.total / 1024 ** 3
+            usage = free / total * 100
+
+            attrs[
+                disk.path
+            ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
+        elif self.key == "commands" and self.coordinator.data.get("commands") is not None:
+            for command in self.coordinator.data["commands"]:
+                attrs[command.name] = command.state
+        elif self.key == "queue" and self.coordinator.data.get("queue") is not None:
+            for item in self.coordinator.data["queue"]:
+                remaining = 1 if item.size == 0 else item.size_remaining / item.size
+                remaining_pct = 100 * (1 - remaining)
+                name = f"{item.episode.series.title} {item.episode.identifier}"
+                attrs[name] = f"{remaining_pct:.2f}%"
+        elif self.key == "series" and self.coordinator.data.get("series") is not None:
+            for item in self.coordinator.data["series"]:
+                attrs[item.series.title] = f"{item.downloaded}/{item.episodes} Episodes"
+        elif self.key == "upcoming" and self.coordinator.data.get("upcoming") is not None:
+            for episode in self.coordinator.data["upcoming"]:
+                attrs[episode.series.title] = episode.identifier
+        elif self.key == "wanted" and self.coordinator.data.get("wanted") is not None:
+            for episode in self.coordinator.data["wanted"].episodes:
+                name = f"{episode.series.title} {episode.identifier}"
+                attrs[name] = episode.airdate
+
+        return attrs
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        if self.key == "diskspace":
+            total_free = sum(disk.free for disk in app.disks)
+            free = total_free / 1024 ** 3
+            return f"{free:.2f}"
+
+        if self.key == "commands" and self.coordinator.data.get("commands") is not None:
+            return len(self.coordinator.data["commands"])
+
+        if self.key == "queue" and self.coordinator.data.get("queue") is not None:
+            return len(self.coordinator.data["queue"])
+
+        if self.key == "series" and self.coordinator.data.get("series") is not None:
+            return len(self.coordinator.data["series"])
+
+        if self.key == "upcoming" and self.coordinator.data.get("upcoming") is not None:
+            return len(self.coordinator.data["upcoming"])
+
+        if self.key == "wanted" and self.coordinator.data.get("wanted") is not None:
+            return self.coordinator.data["wanted"].total
+
+        return None
 
 
 class SonarrCommandsSensor(SonarrSensor):
@@ -100,27 +159,7 @@ class SonarrCommandsSensor(SonarrSensor):
             name=f"{coordinator.sonarr.app.info.app_name} Commands",
             unit_of_measurement="Commands",
             enabled_default=False,
-            datapoint="commands",
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        attrs = {}
-
-        if self.coordinator.data.get("commands") is not None:
-            for command in self.coordinator.data["commands"]:
-                attrs[command.name] = command.state
-
-        return attrs
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the sensor."""
-        if self.coordinator.data.get("commands") is not None:
-            return len(self.coordinator.data["commands"])
-
-        return None
 
 
 class SonarrDiskspaceSensor(SonarrSensor):
@@ -136,32 +175,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
             name=f"{coordinator.sonarr.app.info.app_name} Disk Space",
             unit_of_measurement=DATA_GIGABYTES,
             enabled_default=False,
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        attrs = {}
-
-        app = self.coordinator.sonarr.app
-        for disk in app.disks:
-            free = disk.free / 1024 ** 3
-            total = disk.total / 1024 ** 3
-            usage = free / total * 100
-
-            attrs[
-                disk.path
-            ] = f"{free:.2f}/{total:.2f}{self.unit_of_measurement} ({usage:.2f}%)"
-
-        return attrs
-
-    @property
-    def native_value(self) -> str:
-        """Return the state of the sensor."""
-        app = self.coordinator.sonarr.app
-        total_free = sum(disk.free for disk in app.disks)
-        free = total_free / 1024 ** 3
-        return f"{free:.2f}"
+        )     
 
 
 class SonarrQueueSensor(SonarrSensor):
@@ -179,30 +193,7 @@ class SonarrQueueSensor(SonarrSensor):
             name=f"{coordinator.sonarr.app.info.app_name} Queue",
             unit_of_measurement="Episodes",
             enabled_default=False,
-            datapoint="queue",
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        attrs = {}
-
-        if self.coordinator.data.get("queue") is not None:
-            for item in self.coordinator.data["queue"]:
-                remaining = 1 if item.size == 0 else item.size_remaining / item.size
-                remaining_pct = 100 * (1 - remaining)
-                name = f"{item.episode.series.title} {item.episode.identifier}"
-                attrs[name] = f"{remaining_pct:.2f}%"
-
-        return attrs
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the sensor."""
-        if self.coordinator.data.get("queue") is not None:
-            return len(self.coordinator.data["queue"])
-
-        return None
 
 
 class SonarrSeriesSensor(SonarrSensor):
@@ -218,27 +209,7 @@ class SonarrSeriesSensor(SonarrSensor):
             name=f"{coordinator.sonarr.app.info.app_name} Shows",
             unit_of_measurement="Series",
             enabled_default=False,
-            datapoint="series",
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        attrs = {}
-
-        if self.coordinator.data.get("series") is not None:
-            for item in self.coordinator.data["series"]:
-                attrs[item.series.title] = f"{item.downloaded}/{item.episodes} Episodes"
-
-        return attrs
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the sensor."""
-        if self.coordinator.data.get("series") is not None:
-            return len(self.coordinator.data["series"])
-
-        return None
 
 
 class SonarrUpcomingSensor(SonarrSensor):
@@ -253,27 +224,7 @@ class SonarrUpcomingSensor(SonarrSensor):
             key="upcoming",
             name=f"{coordinator.sonarr.app.info.app_name} Upcoming",
             unit_of_measurement="Episodes",
-            datapoint="upcoming",
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        attrs = {}
-
-        if self.coordinator.data.get("upcoming") is not None:
-            for episode in self.coordinator.data["upcoming"]:
-                attrs[episode.series.title] = episode.identifier
-
-        return attrs
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the sensor."""
-        if self.coordinator.data.get("upcoming") is not None:
-            return len(self.coordinator.data["upcoming"])
-
-        return None
 
 
 class SonarrWantedSensor(SonarrSensor):
@@ -289,25 +240,4 @@ class SonarrWantedSensor(SonarrSensor):
             name=f"{coordinator.sonarr.app.info.app_name} Wanted",
             unit_of_measurement="Episodes",
             enabled_default=False,
-            datapoint="wanted",
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        attrs = {}
-
-        if self.coordinator.data.get("wanted") is not None:
-            for episode in self.coordinator.data["wanted"].episodes:
-                name = f"{episode.series.title} {episode.identifier}"
-                attrs[name] = episode.airdate
-
-        return attrs
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the sensor."""
-        if self.coordinator.data.get("wanted") is not None:
-            return self.coordinator.data["wanted"].total
-
-        return None
