@@ -20,14 +20,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="commands",
         name="Commands",
-        icon="mdi:code-braces",  
+        icon="mdi:code-braces", 
         unit_of_measurement="Commands",
         enabled_default=False,
     ),
     SensorEntityDescription(
         key="diskspace",
         name="Disk Space",
-        icon="mdi:harddisk", 
+        icon="mdi:harddisk",
         native_unit_of_measurement=DATA_GIGABYTES,
         enabled_default=False,
     ),
