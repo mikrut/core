@@ -20,7 +20,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="commands",
         name="Commands",
-        icon="mdi:code-braces", 
+        icon="mdi:code-braces",
         unit_of_measurement="Commands",
         enabled_default=False,
     ),
