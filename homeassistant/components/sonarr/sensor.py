@@ -70,7 +70,7 @@ async def async_setup_entry(
     coordinator: SonarrDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = [
-        SonarrSensor(coordinator, entry.entry_id, description),
+        SonarrSensor(coordinator, entry.entry_id, description)
         for description in SENSOR_TYPES
     ]
 
