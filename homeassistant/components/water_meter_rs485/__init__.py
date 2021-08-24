@@ -10,6 +10,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH
 from homeassistant.core import HomeAssistant
+import threading
 
 from .const import (
     CONF_BAUDRATE,
@@ -38,55 +39,60 @@ class RS485Master:
             stopbits=StopBitsType.get_by_description(config[CONF_STOP_BITS]),
         )
         self._serial_port.port = config[CONF_SERIAL_PORT]
+        self._serial_port.timeout = 2
+        self._lock = threading.Lock()
 
     def open(self):
         self._serial_port.open()
 
     def read_value(self, unique_id: str) -> Decimal | None:
-        sensor_id = int(unique_id)
-        address = 0
-        digit_coeff = 0
-        while sensor_id > 0:
-            last_digit = sensor_id % 10
-            sensor_id //= 10
-            address |= last_digit << digit_coeff
-            digit_coeff += 4
+        with self._lock:
+            sensor_id = int(unique_id)
+            address = 0
+            digit_coeff = 0
+            while sensor_id > 0:
+                last_digit = sensor_id % 10
+                sensor_id //= 10
+                address |= last_digit << digit_coeff
+                digit_coeff += 4
 
-        message = bytearray()
-        ADDRESS_SIZE_BYTES = 4
-        for i in range(0, ADDRESS_SIZE_BYTES):
-            message.append((address >> (ADDRESS_SIZE_BYTES - i - 1) * 8) & 0xFF)
+            message = bytearray()
+            ADDRESS_SIZE_BYTES = 4
+            for i in range(0, ADDRESS_SIZE_BYTES):
+                message.append((address >> (ADDRESS_SIZE_BYTES - i - 1) * 8) & 0xFF)
 
-        COMMAND_READ_VOLUME = 0x01
-        command = COMMAND_READ_VOLUME
-        message.append(command)
+            COMMAND_READ_VOLUME = 0x01
+            command = COMMAND_READ_VOLUME
+            message.append(command)
 
-        LENGTH_BYTE_INDEX = 5
-        message.append(0x00)
+            LENGTH_BYTE_INDEX = 5
+            message.append(0x00)
 
-        message.append(0x01)
-        message.append(0x00)
-        message.append(0x00)
-        message.append(0x00)
+            message.append(0x01)
+            message.append(0x00)
+            message.append(0x00)
+            message.append(0x00)
 
-        message.append(0xFD)
-        message.append(0xEC)
+            message.append(0xFD)
+            message.append(0xEC)
 
-        length = len(message) + 2
-        message[LENGTH_BYTE_INDEX] = length
+            length = len(message) + 2
+            message[LENGTH_BYTE_INDEX] = length
 
-        crc16 = libscrc.modbus(message)
-        message.append((crc16 >> 0) & 0xFF)
-        message.append((crc16 >> 8) & 0xFF)
+            crc16 = libscrc.modbus(message)
+            message.append((crc16 >> 0) & 0xFF)
+            message.append((crc16 >> 8) & 0xFF)
 
-        self._serial_port.write(message)
-        response = self._serial_port.read(length)
+            self._serial_port.write(message)
+            response = self._serial_port.read(length)
+            if len(response) < length:
+                return None
 
-        volume_data = response[6:10]
-        volume = Decimal(int.from_bytes(volume_data, "little"))
-        volume /= 1000
+            volume_data = response[6:10]
+            volume = Decimal(int.from_bytes(volume_data, "little"))
+            volume /= 1000
 
-        return volume
+            return volume
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

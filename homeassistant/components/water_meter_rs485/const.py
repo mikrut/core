@@ -14,6 +14,8 @@ CONF_BAUDRATE = "baudrate"
 CONF_BYTE_SIZE = "byte_size"
 CONF_PARITY = "parity"
 CONF_STOP_BITS = "stop_bits"
+CONF_METER_ID_1 = "meter_id_1"
+CONF_METER_ID_2 = "meter_id_2"
 
 
 class ParityType(enum.Enum):
@@ -176,6 +178,8 @@ CONF_WATERMETER_RS485_PORT_SCHEMA = vol.Schema(
         vol.Required(CONF_STOP_BITS, default=DEFAULT_STOP_BITS.description): vol.In(
             sorted(StopBitsType.list())
         ),
+        vol.Required(CONF_METER_ID_1): cv.positive_int,
+        vol.Optional(CONF_METER_ID_2): cv.positive_int,
     }
 )
 

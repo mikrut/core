@@ -4,13 +4,14 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_GAS,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import VOLUME_CUBIC_METERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_METER_ID_1, CONF_METER_ID_2
 
 
 async def async_setup_entry(
@@ -18,19 +19,25 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    dm = hass.data[DOMAIN]
-    ce = dm[config_entry.entry_id]
-    ma = ce["master"]
-    async_add_entities(
-        new_entities=[
-            Dg15Sensor(
-                unique_id="4344155",
-                master=ma,
-                hass=hass,
-            ),
-        ],
-        update_before_add=True,
-    )
+    conf = config_entry.data
+    master = hass.data[DOMAIN][config_entry.entry_id]["master"]
+
+    entities = []
+    for id_key in [CONF_METER_ID_1, CONF_METER_ID_2]:
+        if conf.get(id_key):
+            entities.append(
+                Dg15Sensor(
+                    unique_id=str(conf[id_key]),
+                    master=master,
+                    hass=hass,
+                )
+            )
+
+    if entities:
+        async_add_entities(
+            new_entities=entities,
+            update_before_add=True,
+        )
 
 
 class Dg15Sensor(SensorEntity):
@@ -46,7 +53,14 @@ class Dg15Sensor(SensorEntity):
         self._unique_id = unique_id
         self._master = master
         self._hass = hass
+        self.entity_description = SensorEntityDescription(
+            key="water_meter_dg15",
+            name=f"Water Meter {self._unique_id}",
+            icon="mdi:water",
+            force_update=True,
+        )
 
+        self._attr_unique_id = unique_id
         self._attr_device_class = DEVICE_CLASS_GAS
         self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         self._attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
