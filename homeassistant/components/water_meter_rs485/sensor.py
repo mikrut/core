@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import VOLUME_CUBIC_METERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity
 
 from .const import DOMAIN, CONF_METER_ID_1, CONF_METER_ID_2
 
@@ -57,7 +58,6 @@ class Dg15Sensor(SensorEntity):
             key="water_meter_dg15",
             name=f"Water Meter {self._unique_id}",
             icon="mdi:water",
-            force_update=True,
         )
 
         self._attr_unique_id = unique_id
@@ -71,3 +71,12 @@ class Dg15Sensor(SensorEntity):
             self._master.read_value, self._unique_id
         )
         self._attr_native_value = volume
+
+    @property
+    def device_info(self) -> entity.DeviceInfo:
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "manufacturer": "Pulsar",
+            "model": "DG-15",
+            "name": self.name,
+        }
