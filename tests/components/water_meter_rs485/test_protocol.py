@@ -1,10 +1,12 @@
 """Test the Water Meter RS485 protocol."""
 from decimal import Decimal
-import homeassistant.components.water_meter_rs485.protocol as protocol
+
 import pytest
 
+import homeassistant.components.water_meter_rs485.rs485.protocol as protocol
 
-class FrameData(object):
+
+class FrameData:
     def __init__(self, address, function, data, id):
         self.address = address
         self.function = function

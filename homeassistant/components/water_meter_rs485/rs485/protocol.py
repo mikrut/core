@@ -1,9 +1,10 @@
 """ Water Meter RS485 protocol """
 
+from decimal import Decimal
 import enum
 import random
+
 import libscrc
-from decimal import Decimal
 
 
 @enum.unique
@@ -16,7 +17,7 @@ class PulsarFunction(enum.Enum):
     WRITE_PARAMS = 0x0B
 
 
-class PulsarFrame(object):
+class PulsarFrame:
     ADDRESS_LENGTH_BYTES = 4
     FUNCTION_LENGTH_BYTES = 1
     LENGTH_LENGTH_BYTES = 1
@@ -156,7 +157,7 @@ class PulsarFrame(object):
         return PulsarFrame(address=address, function=function, data=data, id=id)
 
 
-class ReadVolumeRequest(object):
+class ReadVolumeRequest:
     def __init__(self, address: int):
         self.frame = PulsarFrame(
             address=address,
@@ -169,7 +170,7 @@ class ReadVolumeRequest(object):
         return self.frame.id
 
 
-class ReadVolumeResponse(object):
+class ReadVolumeResponse:
     VOLUME_ENDIANNESS = "little"
     VOLUME_UNITS_IN_M3 = 1000
 
