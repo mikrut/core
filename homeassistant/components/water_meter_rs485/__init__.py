@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from os import stat
+from typing import SupportsIndex
 
-import libscrc
 import serial
 
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -11,6 +12,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH
 from homeassistant.core import HomeAssistant
 import threading
+from .protocol import (
+    ReadVolumeRequest,
+    ReadVolumeResponse,
+)
 
 from .const import (
     CONF_BAUDRATE,
@@ -48,51 +53,20 @@ class RS485Master:
     def read_value(self, unique_id: str) -> Decimal | None:
         with self._lock:
             sensor_id = int(unique_id)
-            address = 0
-            digit_coeff = 0
-            while sensor_id > 0:
-                last_digit = sensor_id % 10
-                sensor_id //= 10
-                address |= last_digit << digit_coeff
-                digit_coeff += 4
 
-            message = bytearray()
-            ADDRESS_SIZE_BYTES = 4
-            for i in range(0, ADDRESS_SIZE_BYTES):
-                message.append((address >> (ADDRESS_SIZE_BYTES - i - 1) * 8) & 0xFF)
+            read_request = ReadVolumeRequest(address=sensor_id)
+            self._serial_port.write(read_request.frame)
 
-            COMMAND_READ_VOLUME = 0x01
-            command = COMMAND_READ_VOLUME
-            message.append(command)
-
-            LENGTH_BYTE_INDEX = 5
-            message.append(0x00)
-
-            message.append(0x01)
-            message.append(0x00)
-            message.append(0x00)
-            message.append(0x00)
-
-            message.append(0xFD)
-            message.append(0xEC)
-
-            length = len(message) + 2
-            message[LENGTH_BYTE_INDEX] = length
-
-            crc16 = libscrc.modbus(message)
-            message.append((crc16 >> 0) & 0xFF)
-            message.append((crc16 >> 8) & 0xFF)
-
-            self._serial_port.write(message)
-            response = self._serial_port.read(length)
-            if len(response) < length:
+            response_frame = self._serial_port.read(
+                ReadVolumeResponse.EXPECTED_TOTAL_LENGTH
+            )
+            if len(response_frame) < ReadVolumeResponse.EXPECTED_TOTAL_LENGTH:
                 return None
 
-            volume_data = response[6:10]
-            volume = Decimal(int.from_bytes(volume_data, "little"))
-            volume /= 1000
-
-            return volume
+            response = ReadVolumeResponse(response_frame)
+            assert response.address == sensor_id
+            assert response.id == read_request.id
+            return response.volume
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
