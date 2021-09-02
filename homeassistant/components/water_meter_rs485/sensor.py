@@ -27,7 +27,7 @@ async def async_setup_entry(
     for id_key in [CONF_METER_ID_1, CONF_METER_ID_2]:
         if conf.get(id_key):
             entities.append(
-                Dg15Sensor(
+                Du15Sensor(
                     unique_id=str(conf[id_key]),
                     master=master,
                     hass=hass,
@@ -41,8 +41,8 @@ async def async_setup_entry(
         )
 
 
-class Dg15Sensor(SensorEntity):
-    """DG-15 Water Meter Sensor"""
+class Du15Sensor(SensorEntity):
+    """DU-15 Water Meter Sensor"""
 
     def __init__(
         self,
@@ -76,7 +76,7 @@ class Dg15Sensor(SensorEntity):
     def device_info(self) -> entity.DeviceInfo:
         return {
             "identifiers": {(DOMAIN, self._unique_id)},
-            "manufacturer": "Pulsar",
-            "model": "DG-15",
+            "manufacturer": "OOO NPP TEPLOVODOKHRAN",
+            "model": "Pulsar DU-15",
             "name": self.name,
         }

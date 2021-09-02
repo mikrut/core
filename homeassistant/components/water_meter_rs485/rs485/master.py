@@ -22,7 +22,7 @@ from homeassistant.components.water_meter_rs485.const import (
 from .protocol import ReadVolumeRequest, ReadVolumeResponse
 
 
-class Master(object):
+class Master:
     WRITE_TIMEOUT = 1
     READ_TIMEOUT = 1
 
@@ -59,7 +59,7 @@ class Master(object):
             sensor_id = int(unique_id)
 
             read_frame = ReadVolumeRequest(address=sensor_id).frame
-            bytes_written = self._serial_port.write(read_frame)
+            bytes_written = self._serial_port.write(read_frame.to_bytes())
             assert bytes_written == read_frame.length
 
             response_frame = self._serial_port.read(
