@@ -6,6 +6,7 @@ import threading
 from typing import Any, Mapping, Optional
 
 import serial
+from serial.serialutil import SerialException
 
 from homeassistant.components.water_meter_rs485.const import (
     CONF_BAUDRATE,
@@ -38,12 +39,21 @@ class Master(object):
         self._serial_port.port = config[CONF_SERIAL_PORT]
         self._lock = threading.Lock()
 
-    def open(self):
+    def open(self) -> bool:
         with self._lock:
-            self._serial_port.open()
+            try:
+                self._serial_port.open()
+            except SerialException:
+                return False
+            return True
 
     def read_value(self, unique_id: str) -> Optional[Decimal]:
         with self._lock:
+            if not self._serial_port.is_open:
+                try:
+                    self._serial_port.open()
+                except SerialException:
+                    return False
             self._serial_port.reset_input_buffer()
 
             sensor_id = int(unique_id)

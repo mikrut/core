@@ -1,23 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "no_serial_port": "There is no serial port present"
         },
         "error": {
-            "no_serial_port": "No serial port",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
+                    "serial_port": "Serial port",
                     "baudrate": "Baudrate",
                     "byte_size": "Byte size",
                     "parity": "Parity",
                     "stop_bits": "Stop bits",
-                    "serial_port": "Serial port"
+                    "meter_id_1": "First meter address",
+                    "meter_id_2": "Second meter address (optional)"
                 },
                 "description": "Select serial port for RS485",
-                "title": "Water Meter RS485"
+                "title": "Pulsar RS485 Water Meter (unofficial integration)"
             }
         }
     }

@@ -1,93 +1,91 @@
 """Test the Water Meter RS485 config flow."""
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from homeassistant import config_entries, setup
-from homeassistant.components.water_meter_rs485.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
 from homeassistant.components.water_meter_rs485.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
+
+LIST_PORTS_FUNCTION = "serial.tools.list_ports.comports"
+GET_SERIAL_BY_ID_FUNCTION = (
+    "homeassistant.components.water_meter_rs485.config_flow.get_serial_by_id"
+)
 
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    comport_str = "Comport Mock"
+    comport_serial = "ab12cd34ef56"
+    comport_manufacturer = "Hoofs and Horns Inc."
+    comport_device = "/dev/fakeTty1"
+    get_serial_result = "/dev/fakeTtyAcm1"
+
+    comport_mock = Mock(
+        serial_number=comport_serial,
+        manufacturer=comport_manufacturer,
+        device=comport_device,
     )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    comport_mock.__str__ = Mock(return_value=comport_str)
+
+    user_selection = (
+        f"{comport_str}, s/n: {comport_serial or 'n/a'} - {comport_manufacturer}"
+    )
+
+    user_input = {
+        "serial_port": user_selection,
+        "baudrate": 9600,
+        "byte_size": "Eight bits",
+        "parity": "None",
+        "stop_bits": "One",
+        "meter_id_1": 123456789,
+        "meter_id_2": 987654321,
+    }
 
     with patch(
-        "homeassistant.components.water_meter_rs485.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.water_meter_rs485.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+        LIST_PORTS_FUNCTION,
+        return_value=[comport_mock],
+    ) as list_ports_mock, patch(
+        GET_SERIAL_BY_ID_FUNCTION,
+        return_value=get_serial_result,
+    ) as get_serial_by_id_mock:
+        await setup.async_setup_component(hass, "persistent_notification", {})
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] is None
+        assert len(list_ports_mock.mock_calls) == 1
+        assert len(get_serial_by_id_mock.mock_calls) == 0
+
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            user_input,
         )
         await hass.async_block_till_done()
 
+    user_input["serial_port"] = get_serial_result
+
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["title"] == user_selection
+    assert result2["data"] == user_input
+    assert len(list_ports_mock.mock_calls) == 2
+    get_serial_by_id_mock.assert_called_once_with(comport_device)
+    assert len(comport_mock.__str__.mock_calls) == 2
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
+async def test_form_no_comports_available(hass: HomeAssistant) -> None:
     with patch(
-        "homeassistant.components.water_meter_rs485.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+        LIST_PORTS_FUNCTION,
+        return_value=[],
+    ) as list_ports_mock:
+        await setup.async_setup_component(hass, "persistent_notification", {})
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.water_meter_rs485.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "no_serial_port"
+        assert len(list_ports_mock.mock_calls) == 1

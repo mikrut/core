@@ -75,11 +75,11 @@ class StopBitsType(enum.Enum):
     """Possible values for stop bits."""
 
     one = (
-        "One",
+        "1",
         serial.STOPBITS_ONE,
     )
     two = (
-        "Two",
+        "2",
         serial.STOPBITS_TWO,
     )
 
@@ -116,19 +116,19 @@ class ByteSizeType(enum.Enum):
     """Possible values for byte size."""
 
     fivebits = (
-        "Five bits",
+        "5",
         serial.FIVEBITS,
     )
     sixbits = (
-        "Six bits",
+        "6",
         serial.SIXBITS,
     )
     sevenbits = (
-        "Seven bits",
+        "7",
         serial.SEVENBITS,
     )
     eightbits = (
-        "Eight bits",
+        "8",
         serial.EIGHTBITS,
     )
 
