@@ -7,7 +7,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "water_meter_rs485"
+DOMAIN = "pulsar_water_meter"
 
 CONF_SERIAL_PORT = "serial_port"
 CONF_BAUDRATE = "baudrate"
@@ -183,4 +183,4 @@ CONF_WATERMETER_RS485_PORT_SCHEMA = vol.Schema(
     }
 )
 
-SIGNAL_ADD_ENTITIES = "water_meter_rs485_add_new_entities"
+SIGNAL_ADD_ENTITIES = "pulsar_water_meter_add_new_entities"

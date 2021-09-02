@@ -398,6 +398,7 @@ homeassistant/components/prometheus/* @knyar
 homeassistant/components/prosegur/* @dgomes
 homeassistant/components/proxmoxve/* @k4ds3 @jhollowe @Corbeno
 homeassistant/components/ps4/* @ktnrg45
+homeassistant/components/pulsar_water_meter/* @mikrut
 homeassistant/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/pvpc_hourly_pricing/* @azogue
@@ -569,7 +570,6 @@ homeassistant/components/volumio/* @OnFreund
 homeassistant/components/wake_on_lan/* @ntilley905
 homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git
-homeassistant/components/water_meter_rs485/* @mikrut
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/weather/* @fabaff
 homeassistant/components/webostv/* @bendavid @thecode

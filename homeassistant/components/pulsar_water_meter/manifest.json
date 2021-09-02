@@ -1,8 +1,8 @@
 {
-  "domain": "water_meter_rs485",
-  "name": "Water Meter RS485",
+  "domain": "pulsar_water_meter",
+  "name": "Pulsar Water Meter RS485",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/water_meter_rs485",
+  "documentation": "https://www.home-assistant.io/integrations/pulsar_water_meter",
   "requirements": [
     "pyserial==3.5",
     "pyserial-asyncio==0.5",

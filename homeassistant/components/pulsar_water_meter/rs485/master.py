@@ -8,7 +8,7 @@ from typing import Any, Mapping, Optional
 import serial
 from serial.serialutil import SerialException
 
-from homeassistant.components.water_meter_rs485.const import (
+from homeassistant.components.pulsar_water_meter.const import (
     CONF_BAUDRATE,
     CONF_BYTE_SIZE,
     CONF_PARITY,

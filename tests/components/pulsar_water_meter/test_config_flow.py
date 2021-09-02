@@ -2,7 +2,7 @@
 from unittest.mock import patch, Mock
 
 from homeassistant import config_entries, setup
-from homeassistant.components.water_meter_rs485.const import DOMAIN
+from homeassistant.components.pulsar_water_meter.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import (
 
 LIST_PORTS_FUNCTION = "serial.tools.list_ports.comports"
 GET_SERIAL_BY_ID_FUNCTION = (
-    "homeassistant.components.water_meter_rs485.config_flow.get_serial_by_id"
+    "homeassistant.components.pulsar_water_meter.config_flow.get_serial_by_id"
 )
 
 
@@ -38,9 +38,9 @@ async def test_form(hass: HomeAssistant) -> None:
     user_input = {
         "serial_port": user_selection,
         "baudrate": 9600,
-        "byte_size": "Eight bits",
+        "byte_size": "8",
         "parity": "None",
-        "stop_bits": "One",
+        "stop_bits": "1",
         "meter_id_1": 123456789,
         "meter_id_2": 987654321,
     }

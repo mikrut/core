@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-import homeassistant.components.water_meter_rs485.rs485.protocol as protocol
+import homeassistant.components.pulsar_water_meter.rs485.protocol as protocol
 
 
 class FrameData:
