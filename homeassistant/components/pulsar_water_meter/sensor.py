@@ -55,7 +55,7 @@ class Du15Sensor(SensorEntity):
         self._master = master
         self._hass = hass
         self.entity_description = SensorEntityDescription(
-            key="water_meter_dg15",
+            key="water_meter_du15",
             name=f"Water Meter {self._unique_id}",
             icon="mdi:water",
         )
