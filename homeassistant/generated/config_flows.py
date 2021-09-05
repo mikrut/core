@@ -239,6 +239,7 @@ FLOWS = [
     "shopping_list",
     "sia",
     "simplisafe",
+    "sm_center_api",
     "sma",
     "smappee",
     "smart_meter_texas",

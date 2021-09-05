@@ -1,0 +1,15 @@
+{
+  "domain": "sm_center_api",
+  "name": "sm_center_api",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sm_center_api",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@mikrut"
+  ],
+  "iot_class": "cloud_polling"
+}
