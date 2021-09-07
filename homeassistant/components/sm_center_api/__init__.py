@@ -9,14 +9,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN
-from .config_flow import PlaceholderHub
+from .household_api import HouseholdApi
 
 
-def get_api(hass: HomeAssistant, entry: ConfigEntry) -> PlaceholderHub:
+def get_api(hass: HomeAssistant, entry: ConfigEntry) -> HouseholdApi:
     return hass.data[DOMAIN][entry.entry_id]
 
 
-def set_api(hass: HomeAssistant, entry: ConfigEntry, api: PlaceholderHub):
+def set_api(hass: HomeAssistant, entry: ConfigEntry, api: HouseholdApi):
     hass.data[DOMAIN][entry.entry_id] = api
 
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sm_center_api from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    api = PlaceholderHub.from_config(
+    api = HouseholdApi.from_config(
         websession=aiohttp.ClientSession(), config=entry.data["api"]
     )
     set_api(hass, entry, api)
